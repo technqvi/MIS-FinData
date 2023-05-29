@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[336]:
+# In[51]:
 
 
 import pandas as pd
@@ -25,20 +25,20 @@ import sqlite3
 
 # # Init constant variable
 
-# In[337]:
+# In[52]:
 
 
-#source_name="yip_ar_receipt"
-source_name="yip_invoice_monthly"
+source_name="yip_ar_receipt"
+#source_name="yip_invoice_monthly"
 init_date_query='2020-01-01'
 # set True whatever , you want to reload all items
 isLoadingAllItems=False
 
+
+# In[53]:
+
+
 listError=[]
-
-
-# In[339]:
-
 
 projectId='mismgntdata-bigquery'
 region='asia-southeast1'
@@ -66,7 +66,7 @@ start_date_query=''
 updateCol='last_update_date'
 
 
-# In[340]:
+# In[54]:
 
 
 dt_imported=datetime.now()
@@ -81,7 +81,7 @@ print(dt_imported)
 
 # # Manage Log Error Message
 
-# In[341]:
+# In[55]:
 
 
 def logErrorMessage(errorList):
@@ -122,7 +122,7 @@ def logErrorMessage(errorList):
 
 # # Get & Set Oracle ViewName and other configuration data
 
-# In[342]:
+# In[56]:
 
 
 # get data from data_source
@@ -143,7 +143,7 @@ def get_ds(data_source_name):
 ds_item=get_ds(source_name)
 
 
-# In[343]:
+# In[57]:
 
 
 if ds_item is not None:
@@ -162,20 +162,22 @@ if ds_item is not None:
     else:
      partitionType=bigquery.TimePartitioningType.DAY
     
-    print(f"{partitionCol} - {partitionType}")
+    print(f"Partition : {partitionCol} - {partitionType}")
     
         
     if ds_item['cluster_col_list']=='':
-     print("No cluster cols")   
-     clusterCols=[]
+     clusterCols=[]   
+     print(f"{clusterCols} (No cluster cols)")   
+     
     else:
      clusterCols=  ds_item['cluster_col_list'].split(',') 
      clusterCols = list(map(str.strip,clusterCols))
      print(clusterCols)
 
     if ds_item['date_col_list']=='':
-     print("No Date cols")   
-     dateCols=[]
+     dateCols=[]   
+     print(f"{dateCols} (No Date cols)")   
+     
     else:
      dateCols=  ds_item['date_col_list'].split(',') 
      dateCols = list(map(str.strip,dateCols))
@@ -185,11 +187,10 @@ if ds_item is not None:
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[344]:
+# In[58]:
 
 
 def get_last_etl_by_ds(data_source):
-    
    try: 
     conn = sqlite3.connect(os.path.abspath(data_base_file))
     sql_last_etl=f"""select etl_datetime,data_source_id from etl_transaction where data_source_id='{data_source}' 
@@ -204,21 +205,24 @@ def get_last_etl_by_ds(data_source):
        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
        logErrorMessage(listError)
 
-
-dfLastETL=get_last_etl_by_ds(source_name)
-if dfLastETL.empty==False:
-  start_date_query=dfLastETL.iloc[0,0]
-  print(f"Start Import on update_at of last ETL date :  {start_date_query}" ) 
+if isLoadingAllItems==False:
+    dfLastETL=get_last_etl_by_ds(source_name)
+    if dfLastETL.empty==False:
+      start_date_query=dfLastETL.iloc[0,0]
+      print(f"Start Import on update_at of last ETL date :  {start_date_query}" ) 
+    else:
+       isLoadingAllItems=True 
+       start_date_query=init_date_query
+       print(f"No etl transaction , we will get started with importing all items from :  {start_date_query}" ) 
 else:
-   isLoadingAllItems=True 
    start_date_query=init_date_query
-   print(f"No etl transaction , we will get started with importing all items from :  {start_date_query}" ) 
+   print(f"Reload all data:  {start_date_query}" ) 
         
 
 
 # # Load data from Oracel  as DataFrame 
 
-# In[345]:
+# In[59]:
 
 
 def loadData(isReLoadAll):
@@ -244,7 +248,7 @@ def loadData(isReLoadAll):
 dfAll=loadData(isLoadingAllItems)
 
 
-# In[346]:
+# In[60]:
 
 
 # dfAll=dfAll.drop(columns=['receipt_number','method_name','application_type']) # receipt
@@ -257,9 +261,17 @@ print(dfAll.info())
 dfAll.head()
 
 
+# In[61]:
+
+
+if dfAll.empty:
+    print("No row to import to BQ")
+    exit()
+
+
 # # BigQuery
 
-# In[347]:
+# In[62]:
 
 
 credentials = service_account.Credentials.from_service_account_file(json_credential_file)
@@ -268,7 +280,7 @@ client = bigquery.Client(credentials=credentials, project=projectId)
 
 # ## Creaste bigquery schema from dataframe
 
-# In[348]:
+# In[63]:
 
 
 # schema = [
@@ -302,7 +314,7 @@ print(schema)
 # 
 # ## Check Existing DataSet and Table
 
-# In[349]:
+# In[64]:
 
 
 # dataset
@@ -314,7 +326,7 @@ except Exception as ex:
     raise("Dataset {} is not found".format(dataset_id))
 
 
-# In[350]:
+# In[65]:
 
 
 def create_table():
@@ -328,11 +340,11 @@ def create_table():
 
     table = client.create_table(table) 
     print(
-        "Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id)
+        "Created new table {}.{}.{}".format(table.project, table.dataset_id, table.table_id)
     )
 
 
-# In[351]:
+# In[66]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -347,7 +359,6 @@ def check_same_schema():
             list_DF_BQ=list_DF_BQ+list(item)
         return list_DF_BQ 
         
-
     listColumnX=find_difference(listColDF,listFieldBQ)
     if len(listColumnX)>0:
         e=f"Columns: {listColumnX} are the same on BigQuery and View {source_name} "
@@ -407,7 +418,7 @@ def check_same_schema():
   
 
 
-# In[352]:
+# In[69]:
 
 
 # table    
@@ -418,9 +429,13 @@ try:
     
     listFieldBQ=[field.name for field in table.schema]
     
+    # required field
     partitionNameBQ=table.time_partitioning.field
     partitionTypeBQ=table.partitioning_type
+
     clusterBQ=table.clustering_fields
+    if clusterBQ is None : clusterBQ =[]
+        
     dateTypeBQ=[field.name for field in table.schema if field.field_type=='DATE']
     
     
@@ -431,10 +446,7 @@ try:
     
     #check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ)
     check_same_schema()
-    
-    
-    
-    
+        
 except Exception as ex:
     create_table()
 
@@ -442,25 +454,24 @@ except Exception as ex:
 
 # # To load data into BQ , technically you need  to save it as CSV file first 
 
-# In[353]:
+# In[18]:
 
 
 if dfAll.empty==False:
     no_rows=len(dfAll)
     print(f"{no_rows} rows are about to be imported to BQ")
     dfAll.to_csv (temp_path,index=False)
-else:
-    print("No row to import to BQ")
-    exit()
 
 
 # # Load data from CSV file to BQ
 
-# In[354]:
+# In[19]:
 
 
 # if isLoadingAllItems==False:
 # print("Load with appending")
+
+# Addtional Try Error
 job_config = bigquery.LoadJobConfig(
     source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
     autodetect=False,write_disposition="WRITE_APPEND"
@@ -489,9 +500,10 @@ print(
 
 # # Create Transation and delete csv file
 
-# In[355]:
+# In[20]:
 
 
+#Addtional Try Error    
 def insertETLTrans(recordList):
     try:
         sqliteConnection = sqlite3.connect(os.path.abspath(data_base_file))
@@ -524,15 +536,16 @@ recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[356]:
+# In[21]:
 
 
+#Addtional Try Error
 if os.path.exists(temp_path):
   os.remove(temp_path)
   print(f"Deleted {temp_path}")
 
 
-# In[138]:
+# In[22]:
 
 
 # if any error , send mail to adminstrator
