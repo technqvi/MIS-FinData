@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[51]:
+# In[2]:
 
 
 import pandas as pd
@@ -12,6 +12,7 @@ from google.oauth2 import service_account
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import BadRequest
 import os
+import sys 
 
 import cx_Oracle
 import sqlalchemy
@@ -19,39 +20,95 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import sqlite3
 
-#https://github.com/technqvi/SMart-AI/blob/main/LoadIncident_PostgresToBQ.ipynb
-#https://github.com/technqvi/AlertPriceInRange/blob/master/price_range_notification.ipynb
+
+# # Parameter variable
+
+# In[3]:
 
 
-# # Init constant variable
-
-# In[52]:
-
-
-source_name="yip_ar_receipt"
+source_name=''
+#source_name="yip_ar_receipt"
 #source_name="yip_invoice_monthly"
-init_date_query='2020-01-01'
+#source_name="yip_pj_status"
 # set True whatever , you want to reload all items
 isLoadingAllItems=False
+is_py=True
 
 
-# In[53]:
+# In[ ]:
+
+
+
+
+
+# In[4]:
+
+
+if is_py:
+    press_Y=''
+    ok=False
+
+    if len(sys.argv) > 1:
+        source_name=sys.argv[1]
+
+        if sys.argv[2]=='0':
+         isLoadingAllItems=False
+        elif sys.argv[2]=='1'  :
+         isLoadingAllItems=True
+        else:
+            raise Exception("isLoadingAllItems 1=True | 0=False")
+
+        ok=True 
+
+    else:
+        print("Enter the following input: ")
+        source_name = input("View Table Name : ")
+        source_name=source_name.lower()
+        load_option= int(input("Loading All Data option (1=True | 0=False): "))
+        if load_option==0:
+         isLoadingAllItems=False
+        elif load_option==1  :
+         isLoadingAllItems=True
+        else:
+            raise Exception("isLoadingAllItems 1=True | 0=False")  
+
+        print(f"Confirm to Load view = {source_name} and Load All Data= {isLoadingAllItems}")
+        press_Y=input(f"Press Y=True But any key=False : ") 
+        if press_Y=='Y':
+         ok=True
+
+    if ok==False:
+        print("No any action")
+        quit()
+
+
+# # Init Variable
+
+# In[16]:
 
 
 listError=[]
+
+init_date_query='2020-01-01 00:00:00'
 
 projectId='mismgntdata-bigquery'
 region='asia-southeast1'
 dataset_id='MIS_BI_DW'
 table_id = f"{projectId}.{dataset_id}.{source_name}"
 
-_ip='172.30.57.10'
+_ip='172.30.57.10' #'172.30.57.10'
 _hostname='YIPGERP'
 _port=1521
 _servicename='PROD'
 _username='yipgbi'
 _password='yipgbi'
 
+
+host = 'mail.yipintsoi.com'
+port=  25
+sender="mis-bi-service@yipintsoigroup.com"
+receivers=['pongthorn.sa@yipintsoi.com']
+#receivers=['pongthorn.sa@yipintsoi.com','mis-bi-service@yipintsoigroup.com']
 
 data_base_file=r'D:\ETL_Orable_To_BQ\etl_web_admin\etl_config_transaction.db'
 sqlite3.register_adapter(np.int64, lambda val: int(val))
@@ -66,7 +123,7 @@ start_date_query=''
 updateCol='last_update_date'
 
 
-# In[54]:
+# In[17]:
 
 
 dt_imported=datetime.now()
@@ -81,7 +138,48 @@ print(dt_imported)
 
 # # Manage Log Error Message
 
-# In[55]:
+# In[18]:
+
+
+import  smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def sendMailForError(errorHtml):
+    message = MIMEMultipart("alternative")
+    message["Subject"] = f"MIS-BI : ETL-Error on {source_name} at {dtStr_imported}"
+    message["From"] = sender
+    message["To"] = ','.join(receivers)
+
+    html =errorHtml 
+
+    part_html = MIMEText(html, "html")
+    message.attach(part_html)
+
+    try:
+
+        with smtplib.SMTP(host,port) as mail_server:
+            #mail_server.login(login, password)
+            mail_server.sendmail(sender, receivers, message.as_string())
+            print("Successfully sent email")
+
+    except (gaierror, ConnectionRefusedError):
+       msg='Failed to connect to the server. Bad connection settings?'
+       listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg]) 
+       logErrorMessage(listError)
+    except smtplib.SMTPServerDisconnected:
+       msg='Failed to connect to the server. Wrong user/password?'
+       listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg]) 
+       logErrorMessage(listError)
+    except smtplib.SMTPException as e:
+       listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
+       logErrorMessage(listError)
+
+    return True
+    
+
+
+# In[19]:
 
 
 def logErrorMessage(errorList):
@@ -111,9 +209,13 @@ def logErrorMessage(errorList):
         
         dfError=pd.DataFrame(data=errorList,columns=["error_datetime","etl_datetime","data_source_id","message"])
         print(dfError)
+        
         logError(dfError.to_records(index=False))
         
+        emailResult=sendMailForError(dfError.to_html(index=False))
+        
         error_message=f"{source_name} ETL at {dt_imported} raise some errors."
+        
         
         # send email to admin
         raise  Exception(error_message)
@@ -122,7 +224,7 @@ def logErrorMessage(errorList):
 
 # # Get & Set Oracle ViewName and other configuration data
 
-# In[56]:
+# In[20]:
 
 
 # get data from data_source
@@ -143,16 +245,18 @@ def get_ds(data_source_name):
 ds_item=get_ds(source_name)
 
 
-# In[57]:
+# In[21]:
 
 
 if ds_item is not None:
     print("Load data source config data")
 
     colFirstLoad=ds_item['first_load_col']
-    print(f"Column to load at first = {colFirstLoad}")
+    colFirstLoad=colFirstLoad.strip().lower()
+    print(f"Date Column as condition to load at first = {colFirstLoad}")
 
     partitionCol=ds_item['partition_date_col']  # required DateTime Type
+    partitionCol=partitionCol.strip().lower()
     if   ds_item['partition_date_type']=="DAY":
      partitionType=bigquery.TimePartitioningType.DAY
     elif ds_item['partition_date_type']=="MONTH":
@@ -172,6 +276,7 @@ if ds_item is not None:
     else:
      clusterCols=  ds_item['cluster_col_list'].split(',') 
      clusterCols = list(map(str.strip,clusterCols))
+     clusterCols = list(map(str.lower,clusterCols))   
      print(clusterCols)
 
     if ds_item['date_col_list']=='':
@@ -181,13 +286,14 @@ if ds_item is not None:
     else:
      dateCols=  ds_item['date_col_list'].split(',') 
      dateCols = list(map(str.strip,dateCols))
+     dateCols = list(map(str.lower,dateCols))      
      print(dateCols)
 
 
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[58]:
+# In[22]:
 
 
 def get_last_etl_by_ds(data_source):
@@ -222,23 +328,24 @@ else:
 
 # # Load data from Oracel  as DataFrame 
 
-# In[59]:
+# In[23]:
 
 
 def loadData(isReLoadAll):
     try:
        engine = sqlalchemy.create_engine(f"oracle+cx_oracle://{_username}:{_password}@{_ip}:{_port}/?service_name={_servicename}")
-       if isReLoadAll==True:
-         sql=f"""select * from {source_name}   
-           where  {colFirstLoad}>=to_date('{start_date_query}','yyyy-mm-dd') 
-           """    
-       else:    
-           sql =f"""select * from {source_name}   
-           where  {updateCol}>=to_date('{start_date_query}','yyyy-mm-dd hh24:mi:ss') """
-
+       # if isReLoadAll==True:
+       #   sql=f"""select * from {source_name}   
+       #     where  {colFirstLoad}>=to_date('{start_date_query}','yyyy-mm-dd') 
+       #     """    
+       # else:    
+       sql =f"""select * from {source_name}  
+       where  {updateCol}>=to_date('{start_date_query}','yyyy-mm-dd hh24:mi:ss') """
        print(sql)
+       
        dfAll = pd.read_sql(sql, engine)
        dfAll['ImportedAt']=dt_imported 
+    
        return dfAll 
     except Exception as e:
        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
@@ -248,7 +355,7 @@ def loadData(isReLoadAll):
 dfAll=loadData(isLoadingAllItems)
 
 
-# In[60]:
+# In[24]:
 
 
 # dfAll=dfAll.drop(columns=['receipt_number','method_name','application_type']) # receipt
@@ -261,7 +368,7 @@ print(dfAll.info())
 dfAll.head()
 
 
-# In[61]:
+# In[25]:
 
 
 if dfAll.empty:
@@ -271,7 +378,7 @@ if dfAll.empty:
 
 # # BigQuery
 
-# In[62]:
+# In[26]:
 
 
 credentials = service_account.Credentials.from_service_account_file(json_credential_file)
@@ -280,7 +387,7 @@ client = bigquery.Client(credentials=credentials, project=projectId)
 
 # ## Creaste bigquery schema from dataframe
 
-# In[63]:
+# In[27]:
 
 
 # schema = [
@@ -314,37 +421,42 @@ print(schema)
 # 
 # ## Check Existing DataSet and Table
 
-# In[64]:
+# In[30]:
 
 
 # dataset
 try:
     dataset = client.get_dataset(f"{projectId}.{dataset_id}")
     print("Dataset {} already exists".format(dataset_id))
-
 except Exception as ex:
-    raise("Dataset {} is not found".format(dataset_id))
+    msg=f"Dataset {dataset_id} is not found"
+    listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg]) 
+    logErrorMessage(listError)
 
 
-# In[65]:
+# In[32]:
 
 
 def create_table():
-    table = bigquery.Table(table_id,schema=schema)
-    if  partitionCol!="":
-     table.time_partitioning = bigquery.TimePartitioning(
-     type_=partitionType,field=partitionCol)
-    
-    if len(clusterCols)>0:
-     table.clustering_fields = clusterCols
+    try:  
+        table = bigquery.Table(table_id,schema=schema)
+        if  partitionCol!="":
+         table.time_partitioning = bigquery.TimePartitioning(
+         type_=partitionType,field=partitionCol)
 
-    table = client.create_table(table) 
-    print(
-        "Created new table {}.{}.{}".format(table.project, table.dataset_id, table.table_id)
-    )
+        if len(clusterCols)>0:
+         table.clustering_fields = clusterCols
+
+        table = client.create_table(table) 
+        print(
+            "Created new table {}.{}.{}".format(table.project, table.dataset_id, table.table_id)
+        )
+    except Exception as e:
+        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
+        logErrorMessage(listError)   
 
 
-# In[66]:
+# In[33]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -361,7 +473,7 @@ def check_same_schema():
         
     listColumnX=find_difference(listColDF,listFieldBQ)
     if len(listColumnX)>0:
-        e=f"Columns: {listColumnX} are the same on BigQuery and View {source_name} "
+        e=f"Columns: {listColumnX} are NOT THE SAME on BigQuery and ViewTable {source_name} of Oracle"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     else:
         print("All Fields on BQ and DF are ok.")
@@ -369,7 +481,7 @@ def check_same_schema():
         
     # PartitionName
     if partitionNameBQ!=partitionCol:
-        e=f"Partition Column :{partitionNameBQ} in BQ is not the same as {partitionCol} defined on ETL Config on Web Admin"
+        e=f"Partition Column :{partitionNameBQ} in BQ is NOT THE SAME as {partitionCol} defined on ETL Config on Web Admin"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     else:
         print("Partition Name Fields on BQ and DF is ok.")    
@@ -377,13 +489,13 @@ def check_same_schema():
 
     # # PartitionDateType
     if partitionTypeBQ!=partitionType:
-        e=f"Partition Date Type :{partitionTypeBQ} in BQ is not the same as {partitionType} defined on ETL Config on Web Admin"
+        e=f"Partition Date Type :{partitionTypeBQ} in BQ is NOT THE SAME as {partitionType} defined on ETL Config on Web Admin"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     
     # Cluster List
     listClusterX=find_difference(clusterCols,clusterBQ)
     if len( listClusterX)>0:
-        e=f"Cluster columns : {listClusterX} are the same on BigQuery defined on ETL Config on Web Admin"
+        e=f"Cluster columns : {listClusterX} are NOT THE SAME on BigQuery and ETL Config on Web Admin"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     else:
         print("All Cluster on BQ and DF are ok.")
@@ -393,7 +505,7 @@ def check_same_schema():
         # Cluster List
     listDateColX=find_difference(dateCols,dateTypeBQ)
     if len( listDateColX)>0:
-        e=f"Date columns : {listDateColX} are the same on BigQuery defined on ETL Config on Web Admin"
+        e=f"Date columns : {listDateColX} are NOT THE SAME on BigQuery and ETL Config on Web Admin"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     else:
         print("All Date Column on BQ and DF are ok.")
@@ -418,7 +530,7 @@ def check_same_schema():
   
 
 
-# In[69]:
+# In[34]:
 
 
 # table    
@@ -454,7 +566,7 @@ except Exception as ex:
 
 # # To load data into BQ , technically you need  to save it as CSV file first 
 
-# In[18]:
+# In[35]:
 
 
 if dfAll.empty==False:
@@ -465,42 +577,35 @@ if dfAll.empty==False:
 
 # # Load data from CSV file to BQ
 
-# In[19]:
+# In[36]:
 
 
 # if isLoadingAllItems==False:
 # print("Load with appending")
+try:
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
+        autodetect=False,write_disposition="WRITE_APPEND"
+        )
 
-# Addtional Try Error
-job_config = bigquery.LoadJobConfig(
-    source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
-    autodetect=False,write_disposition="WRITE_APPEND"
-    )
-# else:
-#     print("Load with all data")
-#     job_config = bigquery.LoadJobConfig(
-#         source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
-#         autodetect=False,write_disposition="WRITE_TRUNCATE"
-#     )
+    with open(temp_path, "rb") as source_file:
+        job = client.load_table_from_file(source_file, table_id, job_config=job_config)
+    job.result()  # Waits for the job to complete.
 
-
-
-with open(temp_path, "rb") as source_file:
-    job = client.load_table_from_file(source_file, table_id, job_config=job_config)
-job.result()  # Waits for the job to complete.
-
-table = client.get_table(table_id)  # Make an API request.
-print(
-    "Loaded {} rows and {} columns to {}".format(
-        no_rows, len(table.schema), table_id
-    )
-)
-
+    table = client.get_table(table_id)  # Make an API request.
+    print(
+        "Loaded {} rows and {} columns to {}".format(
+            no_rows, len(table.schema), table_id
+        )
+    )  
+except Exception as e:
+    listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
+    logErrorMessage(listError)
 
 
 # # Create Transation and delete csv file
 
-# In[20]:
+# In[37]:
 
 
 #Addtional Try Error    
@@ -518,8 +623,10 @@ def insertETLTrans(recordList):
         sqliteConnection.commit()
         cursor.close()
 
-    except sqlite3.Error as error:
-        print("Failed to insert etl_transaction table", error)
+    except Exception as e:
+        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
+        logErrorMessage(listError)
+        print("Failed to insert etl_transaction table", str(e))
     finally:
         if sqliteConnection:
             sqliteConnection.close()
@@ -536,19 +643,18 @@ recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[21]:
+# In[38]:
 
 
 #Addtional Try Error
-if os.path.exists(temp_path):
-  os.remove(temp_path)
-  print(f"Deleted {temp_path}")
-
-
-# In[22]:
-
-
-# if any error , send mail to adminstrator
+try:
+    if os.path.exists(temp_path):
+      os.remove(temp_path)
+      print(f"Deleted {temp_path}")
+    
+except Exception as e:
+    listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
+    logErrorMessage(listError)
 
 
 # In[ ]:
