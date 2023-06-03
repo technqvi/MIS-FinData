@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[567]:
+# In[2]:
 
 
 import pandas as pd
@@ -23,17 +23,14 @@ import sqlite3
 
 # # Parameter variable
 
-# In[568]:
+# In[3]:
 
 
 source_name=''
-#source_name='yip_po_listing'
-#source_name="yip_ar_receipt"  # df/csv
-# source_name='yip_ap_payment' # csv
-# source_name="yip_invoice_monthly" # df/csv
-#source_name="yip_pj_status" # csv
+#source_name="yip_ar_receipt"
+#source_name="yip_invoice_monthly"
+#source_name="yip_pj_status"
 # set True whatever , you want to reload all items
-
 isLoadingAllItems=False
 is_py=True
 
@@ -44,7 +41,7 @@ is_py=True
 
 
 
-# In[569]:
+# In[4]:
 
 
 if is_py:
@@ -87,7 +84,7 @@ if is_py:
 
 # # Init Variable
 
-# In[570]:
+# In[16]:
 
 
 listError=[]
@@ -126,7 +123,7 @@ start_date_query=''
 updateCol='last_update_date'
 
 
-# In[571]:
+# In[17]:
 
 
 dt_imported=datetime.now()
@@ -141,7 +138,7 @@ print(dt_imported)
 
 # # Manage Log Error Message
 
-# In[572]:
+# In[18]:
 
 
 import  smtplib
@@ -182,10 +179,10 @@ def sendMailForError(errorHtml):
     
 
 
-# In[573]:
+# In[19]:
 
 
-def logErrorMessage(errorList,raise_ex=True):
+def logErrorMessage(errorList):
     def logError(recordList):
         try:
             sqliteConnection = sqlite3.connect(os.path.abspath(data_base_file))
@@ -215,18 +212,19 @@ def logErrorMessage(errorList,raise_ex=True):
         
         logError(dfError.to_records(index=False))
         
-        #emailResult=sendMailForError(dfError.to_html(index=False))
+        emailResult=sendMailForError(dfError.to_html(index=False))
         
         error_message=f"{source_name} ETL at {dt_imported} raise some errors."
         
-        if raise_ex==True:
-         raise  Exception(error_message)
+        
+        # send email to admin
+        raise  Exception(error_message)
     
 
 
 # # Get & Set Oracle ViewName and other configuration data
 
-# In[574]:
+# In[20]:
 
 
 # get data from data_source
@@ -247,7 +245,7 @@ def get_ds(data_source_name):
 ds_item=get_ds(source_name)
 
 
-# In[575]:
+# In[21]:
 
 
 if ds_item is not None:
@@ -295,7 +293,7 @@ if ds_item is not None:
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[576]:
+# In[22]:
 
 
 def get_last_etl_by_ds(data_source):
@@ -330,7 +328,7 @@ else:
 
 # # Load data from Oracel  as DataFrame 
 
-# In[577]:
+# In[23]:
 
 
 def loadData(isReLoadAll):
@@ -357,13 +355,11 @@ def loadData(isReLoadAll):
 dfAll=loadData(isLoadingAllItems)
 
 
-# In[578]:
+# In[24]:
 
 
 # dfAll=dfAll.drop(columns=['receipt_number','method_name','application_type']) # receipt
 #dfAll=dfAll.drop(columns=['customer_trx_id','org_id']) # invoice
-
-# dfAll=dfAll.drop(columns=['product_type','product_brand'])
 
 listColDF=dfAll.columns.tolist()
 print(listColDF)
@@ -372,7 +368,7 @@ print(dfAll.info())
 dfAll.head()
 
 
-# In[579]:
+# In[25]:
 
 
 if dfAll.empty:
@@ -382,7 +378,7 @@ if dfAll.empty:
 
 # # BigQuery
 
-# In[580]:
+# In[26]:
 
 
 credentials = service_account.Credentials.from_service_account_file(json_credential_file)
@@ -391,7 +387,7 @@ client = bigquery.Client(credentials=credentials, project=projectId)
 
 # ## Creaste bigquery schema from dataframe
 
-# In[581]:
+# In[27]:
 
 
 # schema = [
@@ -401,44 +397,31 @@ client = bigquery.Client(credentials=credentials, project=projectId)
 # bigquery.SchemaField("INVOICE_AMOUNT", "FLOAT", mode="NULLABLE"),    
 # bigquery.SchemaField("LAST_UPDATE_DATE", "TIMESTAMP", mode="NULLABLE"),
 # ]
-#https://cloud.google.com/bigquery/docs/schemas
-#https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.dtypes.html
+
 schema = []
 srCols=dfAll.dtypes
-try:
-    for name, type_name in srCols.items():
-        # print(name,type_name)
-        if str(type_name) in ['int32','int64']:
-          schema.append(bigquery.SchemaField(name, "INTEGER", mode="NULLABLE"))
-        elif str(type_name) =='float64':
-          schema.append(bigquery.SchemaField(name, "FLOAT", mode="NULLABLE"))
-        elif str(type_name) =='datetime64[ns]':
-          if name in   dateCols:
-             schema.append(bigquery.SchemaField(name,  "DATE", mode="NULLABLE"))
-          else:
-             schema.append(bigquery.SchemaField(name,  "DATETIME", mode="NULLABLE"))
-        elif str(type_name) == 'bool':
-             schema.append(bigquery.SchemaField(name,  "BOOL", mode="NULLABLE"))
-        else: # if not found type , it will be converted to STRING
-           schema.append(bigquery.SchemaField(name,  "STRING", mode="NULLABLE")) 
-        
-    # if  len(schema)!=len(listColDF):
-    #    listFieldBQError=[field.name for field in schema]
-    #    intersec_DF_BQ = [set(listColDF).symmetric_difference(set(listFieldBQError))]
-    #    raise Exception(f"{len(schema)}!={len(listColDF)} , {intersec_DF_BQ} in Dataframe can not be converted to Bigquery Data type")
-
-except Exception as e:
-   listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
-   logErrorMessage(listError)
-print("Total number of field of the schema :",len(schema))    
-print(schema) 
+for name, type_name in srCols.items():
+    # print(name,type_name)
+    if str(type_name) in ['int32','int64']:
+      schema.append(bigquery.SchemaField(name, "INTEGER"))
+    elif str(type_name) =='float64':
+      schema.append(bigquery.SchemaField(name, "FLOAT"))
+    elif str(type_name) =='datetime64[ns]':
+      if name in   dateCols:
+         schema.append(bigquery.SchemaField(name,  "DATE"))
+      else:
+         schema.append(bigquery.SchemaField(name,  "DATETIME"))
+    else:
+       schema.append(bigquery.SchemaField(name,  "STRING")) 
+      
+print(schema)  
 
 
 # ## Check whether dataframe and bigquery schema are the same
 # 
 # ## Check Existing DataSet and Table
 
-# In[583]:
+# In[30]:
 
 
 # dataset
@@ -451,7 +434,7 @@ except Exception as ex:
     logErrorMessage(listError)
 
 
-# In[584]:
+# In[32]:
 
 
 def create_table():
@@ -473,7 +456,7 @@ def create_table():
         logErrorMessage(listError)   
 
 
-# In[585]:
+# In[33]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -547,10 +530,10 @@ def check_same_schema():
   
 
 
-# In[586]:
+# In[34]:
 
 
-# try to create table    
+# table    
 try:
     table=client.get_table(table_id)
     print("Table {} already exists.".format(table_id))
@@ -577,88 +560,52 @@ try:
     check_same_schema()
         
 except Exception as ex:
-    #print("Don't create table")
     create_table()
 
 
 
 # # To load data into BQ , technically you need  to save it as CSV file first 
 
-# In[587]:
+# In[35]:
 
 
-# dfAll=dfAll.iloc[:45501,:]  poListing
-# #dfAll=dfAll.drop(45502) # error
-
-
-# In[588]:
-
-
-loading_from='csv' # cvs/dataframe
-no_rows=len(dfAll)
-no_cols=len(dfAll.columns)
-if dfAll.empty==False and loading_from=='csv':
-    print("Save dataframe to csv as source first")
+if dfAll.empty==False:
+    no_rows=len(dfAll)
+    print(f"{no_rows} rows are about to be imported to BQ")
     dfAll.to_csv (temp_path,index=False)
-print(f"{no_rows} rows and {no_cols} are about to be imported to BQ by {loading_from}")
 
 
 # # Load data from CSV file to BQ
 
-# In[589]:
+# In[36]:
 
 
-def collectBQError(x_job):
- if x_job.errors is not None:
-    for error in x_job.errors:
-      msg=f"{error['reason']} - {error['message']}"
-      listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg])
-      logErrorMessage(listError,False)
-
-
-# In[590]:
-
-
-# cannot auto detect because some column , there are Y,N,R  For R BQ is known as Bool
-#https://cloud.google.com/bigquery/docs/loading-data-cloud-storage-csv
-
-
-
+# if isLoadingAllItems==False:
+# print("Load with appending")
 try:
-    print(f"Load bulk data from {loading_from}")
-    if loading_from=='csv' :
-        
-        job_config = bigquery.LoadJobConfig(
-            source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
-            schema=schema,autodetect=False,
-            max_bad_records=(no_rows-1),
-            # autodetect=True,
-            write_disposition="WRITE_APPEND",
-            )
-        with open(temp_path, "rb") as source_file:
-            job = client.load_table_from_file(source_file, table_id, job_config=job_config)
-    else :
-        # job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")  # ok for POs Listing
-        
-        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND",schema=schema)
-        job = client.load_table_from_dataframe(dfAll, table_id, job_config=job_config)  
+    job_config = bigquery.LoadJobConfig(
+        source_format=bigquery.SourceFormat.CSV, skip_leading_rows=1,
+        autodetect=False,write_disposition="WRITE_APPEND"
+        )
 
-
+    with open(temp_path, "rb") as source_file:
+        job = client.load_table_from_file(source_file, table_id, job_config=job_config)
     job.result()  # Waits for the job to complete.
-    
-    # error but continue
-    collectBQError(job)   
-   
 
-
+    table = client.get_table(table_id)  # Make an API request.
+    print(
+        "Loaded {} rows and {} columns to {}".format(
+            no_rows, len(table.schema), table_id
+        )
+    )  
 except Exception as e:
-  collectBQError(job)
-    
+    listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
+    logErrorMessage(listError)
 
 
 # # Create Transation and delete csv file
 
-# In[591]:
+# In[37]:
 
 
 #Addtional Try Error    
@@ -696,7 +643,7 @@ recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[592]:
+# In[38]:
 
 
 #Addtional Try Error
@@ -708,18 +655,6 @@ try:
 except Exception as e:
     listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     logErrorMessage(listError)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
 
 # In[ ]:
