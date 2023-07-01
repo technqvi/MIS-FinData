@@ -7,9 +7,14 @@ dashboard analytics using PowerBI.
 * [Djanog 4.2](https://docs.djangoproject.com/en/4.2/releases/4.2/) 
 * [DB Browser for SQLite](https://sqlitebrowser.org/) 
 
-# ETL Process
-* -
-
+# ETL Process to load data from Oracle database to BigQuery
+* Load data view configuration data from SQLite by view name like  partition column , cluster columns  date column  and ETL mode(CSV,Dataframe).
+* Get last time to perform ETL to BQ to do incremental updates from Oracle view.
+* Retrieve data from Oracle database by specifying condition to synch the most-up-to-date records.
+* Check whether the table exists(if no table) and check table schema on view and BQ is the same (if so).
+* Ingest data into BigQuery.
+* Record ETL Transaction to SQLite.
+* if any error, the script will record error through SQLite and send any error notification to admin.
 
 # Program Structure
 * [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) : script to ingest data from oracle to BigQuery, we can schecule it on Window Task Scheduler.
