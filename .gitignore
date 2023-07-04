@@ -1,6 +1,8 @@
 .ipynb_checkpoints
 .ipynb_checkpoints/
 .venv
+.env
+
 *.lnk
 *.csv
 *.xlsx
