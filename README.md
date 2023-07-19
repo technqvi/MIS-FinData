@@ -8,7 +8,7 @@ dashboard analytics using PowerBI.
 * [DB Browser for SQLite](https://sqlitebrowser.org/) 
 
 # ETL Process to load data from Oracle database to BigQuery
-![image](https://github.com/technqvi/MIS-FinData/assets/38780060/c328da94-16be-4452-9c6c-b97cae81c414)
+![image](https://github.com/technqvi/MIS-FinData/assets/38780060/cc3eb971-4bbc-437d-95a9-bb786e6620f7)
 * Load data view configuration data from SQLite by view name like  partition column , cluster columns  date column  and ETL mode(CSV,Dataframe).
 * Get last time to perform ETL to BQ to do incremental updates from Oracle view.
 * Retrieve data from Oracle database by specifying condition to synch the most-up-to-date records.
