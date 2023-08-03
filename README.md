@@ -17,14 +17,9 @@ dashboard analytics using PowerBI.
 * Record ETL Transaction to SQLite.
 * If thre is any error, the script will record error through SQLite and send any error notification to admin.
 
-  # Web Administration & Configuration (Python Django)
+  # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
-  There are 4 main functions (Menu on left side)
-  * Data Store(Oracle Database) : it stores configuration data to connect Oracle database
-  * Data Source: it stores oracle view name and bigquery configuration data such as Partition column,Cluster columns and oracle connection data from Data Store.
-  * ETL Transaction : it stores transaction of loading data from Oracle to Bigquery.
-  * Log Error: it stores any error from ETL Transaction.
-
+ 
 # Program Structure
 * [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) : script to ingest data from oracle to BigQuery, we can schecule it on Window Task Scheduler.
 * [ETL_Orable_To_BQ/etl_web_admin](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin) : web site administrator to manage data source data and view ETL-Transactoin & Error.
