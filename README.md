@@ -15,7 +15,7 @@ dashboard analytics using PowerBI.
 * Check whether the table exists(if no table) and check table schema on view and BQ is the same (if so).
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
-* if any error, the script will record error through SQLite and send any error notification to admin.
+* If thre is any error, the script will record error through SQLite and send any error notification to admin.
 
   # Web Administration & Configuration (Python Django)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
