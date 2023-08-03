@@ -28,4 +28,4 @@ dashboard analytics using PowerBI.
 # Program Structure
 * [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) : script to ingest data from oracle to BigQuery, we can schecule it on Window Task Scheduler.
 * [etl_web_admin](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin) : web site administrator to manage data source data and view ETL-Transactoin & Error.
-* etl_config_transaction.db : SQLite Data base to store configuration data , transaction and error.
+* etl_config_transaction.db : SQLite Data base to store configuration data , transaction and error. To purge old data 45 days ago, we can run purge_etl_trans_n_days.bat
