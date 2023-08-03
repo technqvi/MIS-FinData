@@ -6,3 +6,9 @@
 *.lnk
 *.csv
 *.xlsx
+
+QueryMISBIOnBQ.ipynb
+# etl_config_transaction.db
+# settings.py
+
+template-job

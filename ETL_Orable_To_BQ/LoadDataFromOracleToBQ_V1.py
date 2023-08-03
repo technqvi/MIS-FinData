@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[11]:
 
 
 import pandas as pd
@@ -26,7 +26,7 @@ from dotenv import dotenv_values
 
 # # Time To Import
 
-# In[2]:
+# In[12]:
 
 
 dt_imported=datetime.now()
@@ -40,12 +40,12 @@ print(dtStr_imported)
 print(dt_imported)
 
 
-env_path=r'.env'
+env_path=r'D:\ETL_Orable_To_BQ\.env'
 
 
 # # Parameter variable
 
-# In[3]:
+# In[25]:
 
 
 # set True whatever , you want to reload all items
@@ -53,11 +53,6 @@ isLoadingAllItems=False
 is_py=True
 
 source_name=''
-
-#source_name='yit_ar_aging_with_cost'
-#source_name='yip_wip_project'
-#source_name='yip_bg_account'
-
 #source_name="yip_invoice_monthly" # df
 
 #source_name="yip_ar_receipt"  # df/csv
@@ -82,7 +77,7 @@ csv_error_folder='csv_error'
 
 # # Enter parameter on script
 
-# In[4]:
+# In[26]:
 
 
 if is_py:
@@ -125,7 +120,7 @@ if is_py:
 
 # # Check temp and error folder
 
-# In[5]:
+# In[27]:
 
 
 if os.path.exists(csv_temp_folder)==False:
@@ -136,7 +131,7 @@ if os.path.exists(csv_error_folder)==False:
 
 # # Init Const Variable
 
-# In[6]:
+# In[28]:
 
 
 listError=[]
@@ -155,7 +150,7 @@ etlDateCols=[updateCol,'creation_date']
 
 # # Email Nofification &  Manage Log Error Message
 
-# In[7]:
+# In[29]:
 
 
 import  smtplib
@@ -196,7 +191,7 @@ def sendMailForError(errorSubject,errorHtml):
     
 
 
-# In[8]:
+# In[30]:
 
 
 def move_error_file(): # if any error ,then move csv to investigte later
@@ -219,7 +214,7 @@ def move_error_file(): # if any error ,then move csv to investigte later
  
 
 
-# In[9]:
+# In[31]:
 
 
 def logErrorMessage(errorList,raise_ex=True):
@@ -283,25 +278,31 @@ def logErrorMessage(errorList,raise_ex=True):
 
 # # Read Credential Config from .env file
 
-# In[10]:
+# In[32]:
 
 
-try: 
+try:
     config = dotenv_values(dotenv_path=env_path)
+
     projectId=config['PROJECT_ID']
     region=config['REGION']
     dataset_id=config['DATASET_ID']
     table_id = f"{projectId}.{dataset_id}.{source_name}"
-    
+    # print(f"{projectId}-{region}-{dataset_id}-{table_id}")
+
+    _ip=config['DATABASE_IP']
+    _hostname=config['DATABASE_HOST']
+    _port=int(config['DATABASE_PORT'])
+    _servicename=config['DATABASES_SERVICE_NAME']
+    _username=config['DATABASES_USER']
+    _password=config['DATABASES_PASSWORD']
+    #print(f"{_ip}#{_hostname}#{_port}#{_servicename}#{_username}#{_password}")
 
     host = config['MAIL_IP']
     port=  int(config['MAIL_PORT'])
     sender=config['MAIL_SENDER']
     receivers=[config['MAIL_RECEIVER']]
     
-    
-    # print(f"{projectId}-{region}-{dataset_id}-{table_id}")
-    # print(f"{host}-{port}-{sender}-{receivers}")
     print("Red all credential confgi values sucessfully.")
 
 
@@ -313,7 +314,7 @@ except Exception as e:
 
 # # Setting BigQuery and Check DataSet
 
-# In[11]:
+# In[33]:
 
 
 # credentials = service_account.Credentials.from_service_account_file(json_credential_file)
@@ -330,9 +331,9 @@ except Exception as ex:
     logErrorMessage(listError)
 
 
-# # Get data view as data source and data store of the data view
+# # Get & Set Oracle ViewName and other configuration data
 
-# In[12]:
+# In[34]:
 
 
 # get data from data_source
@@ -354,47 +355,7 @@ ds_item=get_ds(source_name)
 print(ds_item)
 
 
-# In[13]:
-
-
-# get data from data_store
-def get_data_store(datastore_id):
-   try: 
-        conn = sqlite3.connect(os.path.abspath(data_base_file))
-        sql_ds=f"""select * from data_store where id={datastore_id}  """
-        print(sql_ds)
-        df_item=pd.read_sql_query(sql_ds, conn)
-        
-        if df_item.empty==False:
-           return df_item.iloc[0,:]
-        else:
-           return None
-   except Exception as e:
-       listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
-       logErrorMessage(listError)
-
-datastore=get_data_store(ds_item["datastore_id"])
-print(datastore['data_store_name'])
-
-try:
-    _ip=datastore['database_ip']
-    _hostname=datastore['database_host']
-    _port=datastore['database_port']
-    _servicename=datastore['databases_service_name']
-    _username=datastore['databases_user']
-    _password=datastore['databases_password']
-    # print(f"{_ip}#{_hostname}#{_port}#{_servicename}#{_username}#{_password}")
-    
-    print("Red all credential confgi values sucessfully.")
-
-
-except Exception as e:
-    msg=f"Not found data store  {datastore['data_store_name']}"
-    listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str( msg)])
-    logErrorMessage(listError)
-
-
-# In[14]:
+# In[35]:
 
 
 if ds_item is not None:
@@ -454,7 +415,7 @@ print(dateColsToConvert)
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[15]:
+# In[36]:
 
 
 def get_last_etl_by_ds(data_source):
@@ -500,7 +461,7 @@ else:
 
 
 
-# In[16]:
+# In[37]:
 
 
 def loadData(isReLoadAll):
@@ -533,13 +494,13 @@ dfAll=loadData(isLoadingAllItems)
 
 # # Test Data
 
-# In[17]:
+# In[38]:
 
 
 # dfAll['last_update_date'].unique()
 
 
-# In[18]:
+# In[39]:
 
 
 # dfAll=dfAll.drop(columns=['line_description8','line_description9'  ,'dept_code'])
@@ -554,7 +515,7 @@ dfAll=loadData(isLoadingAllItems)
 
 # # Transform Dataframe prior to Ingesting it to BQ
 
-# In[19]:
+# In[40]:
 
 
 dfAll['ImportedAt']=dt_imported 
@@ -567,7 +528,7 @@ print(dfAll.info())
 dfAll.head()
 
 
-# In[20]:
+# In[172]:
 
 
 if dfAll.empty:
@@ -575,7 +536,7 @@ if dfAll.empty:
     exit()
 
 
-# In[21]:
+# In[173]:
 
 
 listColAdminConfig=[colFirstLoad,partitionCol]
@@ -604,7 +565,7 @@ else:
 
 # # BigQuery Schema Management
 
-# In[22]:
+# In[174]:
 
 
 def createBQSchemaByDF():
@@ -645,7 +606,7 @@ def createBQSchemaByDF():
     return  schema,schemaDictNameType
 
 
-# In[23]:
+# In[175]:
 
 
 #https://pbpython.com/pandas_dtypes.html
@@ -675,7 +636,7 @@ def convert_dfSchema_same_bqSChema(bqName,bqType):
     raise ex
 
 
-# In[24]:
+# In[176]:
 
 
 def create_table(schema):
@@ -697,7 +658,7 @@ def create_table(schema):
         logErrorMessage(listError)   
 
 
-# In[25]:
+# In[177]:
 
 
 def get_table():
@@ -708,7 +669,7 @@ def get_table():
         return False
 
 
-# In[26]:
+# In[178]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -801,7 +762,7 @@ def check_same_schema():
   
 
 
-# In[27]:
+# In[179]:
 
 
 isExistingTable=get_table()
@@ -839,7 +800,7 @@ else:
 
 # # Load data from CSV file to BQ
 
-# In[28]:
+# In[180]:
 
 
 try:
@@ -861,7 +822,7 @@ except Exception as e:
   logErrorMessage(listError)
 
 
-# In[29]:
+# In[181]:
 
 
 # cannot auto detect because some column , there are Y,N,R  For R BQ is known as Bool
@@ -914,7 +875,7 @@ except Exception as e:
 
 # # Create Transation and delete csv file
 
-# In[30]:
+# In[182]:
 
 
 #Addtional Try Error    
@@ -953,7 +914,7 @@ recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[31]:
+# In[183]:
 
 
 #Addtional Try Error
