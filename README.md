@@ -19,6 +19,7 @@ dashboard analytics using PowerBI.
 
   # Web Administration & Configuration (Python Django)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
+  There are 2 main sections
 
 # Program Structure
 * [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) : script to ingest data from oracle to BigQuery, we can schecule it on Window Task Scheduler.
