@@ -1,20 +1,36 @@
 from django.db import models
-
+from datetime import datetime
 
 # Create your models here.
 
+
+DATABASE_PRODUCT_CHOICES = (
+    ("oracle","Oracle"),
+    ("mssql","MSSQL" ),
+     ("postgresql","Postgresql"),
+)
+
+
 class DataStore(models.Model):
 
-    database_ip=models.CharField(max_length=255,verbose_name='DATABASE_IP')
-    database_host=models.CharField(max_length=255,verbose_name='DATABASE_HOST') 
-    database_port=models.IntegerField(verbose_name='DATABASE_PORT')
+    database_ip=models.CharField(max_length=255,verbose_name='IP')
+    database_host=models.CharField(max_length=255,verbose_name='HOST NAME') 
+    database_port=models.IntegerField(verbose_name='PORT')
 
-    databases_service_name=models.CharField(max_length=255,verbose_name='DATABASES_SERVICE_NAME')
-    databases_user=models.CharField(max_length=255,verbose_name='DATABASES_USER')
-    databases_password=models.CharField(max_length=255,verbose_name='DATABASES_PASSWORD')
+     
+    databases_service_name=models.CharField(max_length=255,verbose_name='SERVICE / INSTANCE NAME') 
+    
+    databases_user=models.CharField(max_length=255,verbose_name='USER')
+    databases_password=models.CharField(max_length=255,verbose_name='PASSWORD')
 
-
-    data_store_name=models.CharField(max_length=255,verbose_name='DATA_STORE_NAME',unique=True)
+    data_store_name=models.CharField(max_length=255,verbose_name='DATA STORE NAME',unique=True)
+    
+    
+    database_product=  models.CharField(
+        max_length = 50,
+        choices = DATABASE_PRODUCT_CHOICES,
+        default = '1',verbose_name='DATABASE PRODUCT'
+    )
     
     class Meta:
         managed = False
@@ -40,11 +56,12 @@ class DataSource(models.Model):
     id = models.CharField(primary_key=True, max_length=100,verbose_name="View Name")
     datastore = models.ForeignKey(DataStore,  on_delete=models.CASCADE)
     first_load_col=models.CharField(max_length=255,verbose_name='First Load Column',help_text='Date Column to determine condition to load since ?')
+    first_load_date= models.DateField('First Load Date',default=datetime(2020,1,1),help_text="Date for the first full load")  
     partition_date_col=models.CharField(max_length=100,verbose_name='Partition Column',help_text='only 1 colName')
     partition_date_type=  models.CharField(
         max_length = 50,
         choices = PARTITIONING_CHOICES,
-        default = '1',verbose_name='Partition Type'
+        default = '2',verbose_name='Partition Type'
     )
     load_from_type=  models.CharField(
         max_length = 50,
