@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[44]:
+# In[1]:
 
 
 import pandas as pd
@@ -15,11 +15,8 @@ import os
 import sys 
 import shutil
 
-import pyodbc # ms sql server
-import cx_Oracle # oracle
-
+import cx_Oracle
 import sqlalchemy
-from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 
 import sqlite3
@@ -27,38 +24,9 @@ import sqlite3
 from dotenv import dotenv_values
 
 
-# # Input Parameter
-
-# In[58]:
-
-
-# set True whatever , you want to reload all items
-isLoadingAllItems=False
-is_py=True
-
-source_name=''
-
-#source_name='vw_IPF'
-
-#source_name='yit_ar_aging_with_cost'
-#source_name='yip_wip_project'
-# source_name='yip_bg_account'
-
-#source_name="yip_invoice_monthly" # df
-
-#source_name="yip_ar_receipt"  # df/csv
-#source_name='yip_ap_payment' # csv
-
-#source_name="yip_pj_status" # csv
-
-# source_name='yip_po_listing' # df
-
-#source_name='yip_gl_account' # df
-
-
 # # Time To Import
 
-# In[59]:
+# In[2]:
 
 
 dt_imported=datetime.now()
@@ -72,13 +40,34 @@ print(dtStr_imported)
 print(dt_imported)
 
 
-env_path=r'D:\ETL_Orable_To_BQ\.env'
+env_path=r'.env'
 
 
-# # Constant variable
+# # Parameter variable
 
-# In[60]:
+# In[3]:
 
+
+# set True whatever , you want to reload all items
+isLoadingAllItems=False
+is_py=True
+
+source_name=''
+
+#source_name='yit_ar_aging_with_cost'
+#source_name='yip_wip_project'
+#source_name='yip_bg_account'
+
+#source_name="yip_invoice_monthly" # df
+
+#source_name="yip_ar_receipt"  # df/csv
+#source_name='yip_ap_payment' # csv
+
+#source_name="yip_pj_status" # csv
+
+# source_name='yip_po_listing' # df
+
+#source_name='yip_gl_account' # df
 
 init_date_query='2020-01-01 00:00:00'
 # init_date_query='2023-01-01 00:00:00'
@@ -93,7 +82,7 @@ csv_error_folder='csv_error'
 
 # # Enter parameter on script
 
-# In[61]:
+# In[4]:
 
 
 if is_py:
@@ -136,7 +125,7 @@ if is_py:
 
 # # Check temp and error folder
 
-# In[62]:
+# In[5]:
 
 
 if os.path.exists(csv_temp_folder)==False:
@@ -147,7 +136,7 @@ if os.path.exists(csv_error_folder)==False:
 
 # # Init Const Variable
 
-# In[63]:
+# In[6]:
 
 
 listError=[]
@@ -166,7 +155,7 @@ etlDateCols=[updateCol,'creation_date']
 
 # # Email Nofification &  Manage Log Error Message
 
-# In[64]:
+# In[7]:
 
 
 import  smtplib
@@ -207,7 +196,7 @@ def sendMailForError(errorSubject,errorHtml):
     
 
 
-# In[65]:
+# In[8]:
 
 
 def move_error_file(): # if any error ,then move csv to investigte later
@@ -230,7 +219,7 @@ def move_error_file(): # if any error ,then move csv to investigte later
  
 
 
-# In[66]:
+# In[9]:
 
 
 def logErrorMessage(errorList,raise_ex=True):
@@ -294,7 +283,7 @@ def logErrorMessage(errorList,raise_ex=True):
 
 # # Read Credential Config from .env file
 
-# In[67]:
+# In[10]:
 
 
 try: 
@@ -313,7 +302,7 @@ try:
     
     # print(f"{projectId}-{region}-{dataset_id}-{table_id}")
     # print(f"{host}-{port}-{sender}-{receivers}")
-    print("Read all credential config values sucessfully.")
+    print("Red all credential confgi values sucessfully.")
 
 
 except Exception as e:
@@ -324,7 +313,7 @@ except Exception as e:
 
 # # Setting BigQuery and Check DataSet
 
-# In[68]:
+# In[11]:
 
 
 # credentials = service_account.Credentials.from_service_account_file(json_credential_file)
@@ -341,9 +330,9 @@ except Exception as ex:
     logErrorMessage(listError)
 
 
-# # Get data view as data source
+# # Get data view as data source and data store of the data view
 
-# In[69]:
+# In[12]:
 
 
 # get data from data_source
@@ -362,14 +351,10 @@ def get_ds(data_source_name):
        logErrorMessage(listError)
     
 ds_item=get_ds(source_name)
-init_date_query=f"{ds_item['first_load_date']} 00:00:00"
 print(ds_item)
-print(f"Init date to query : {init_date_query}")
 
 
-# # Get data store by data view
-
-# In[70]:
+# In[13]:
 
 
 # get data from data_store
@@ -389,21 +374,18 @@ def get_data_store(datastore_id):
        logErrorMessage(listError)
 
 datastore=get_data_store(ds_item["datastore_id"])
-db_product=datastore['database_product']
-print(f"{datastore['data_store_name']} - {datastore['database_product']}")
+print(datastore['data_store_name'])
 
 try:
-     
     _ip=datastore['database_ip']
     _hostname=datastore['database_host']
     _port=datastore['database_port']
     _servicename=datastore['databases_service_name']
     _username=datastore['databases_user']
     _password=datastore['databases_password']
-    #print(f"{_ip}#{_hostname}#{_port}#{_servicename}#{_username}#{_password}")
-
+    # print(f"{_ip}#{_hostname}#{_port}#{_servicename}#{_username}#{_password}")
     
-    print("Read database values sucessfully.")
+    print("Red all credential confgi values sucessfully.")
 
 
 except Exception as e:
@@ -412,9 +394,7 @@ except Exception as e:
     logErrorMessage(listError)
 
 
-# # Load Data Configuration of each data source for BigQuery
-
-# In[71]:
+# In[14]:
 
 
 if ds_item is not None:
@@ -474,7 +454,7 @@ print(dateColsToConvert)
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[72]:
+# In[15]:
 
 
 def get_last_etl_by_ds(data_source):
@@ -512,36 +492,18 @@ else:
  is_load_all=0   
 
 
-# # Load data from DataBase  as DataFrame 
+# # Load data from Oracel  as DataFrame 
 
-# In[316]:
-
-
-# https://learn.microsoft.com/en-us/sql/machine-learning/data-exploration/python-dataframe-pandas?view=sql-server-ver16
-def loadData_mssql(isReLoadAll):
-   
-    try:
-       cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+_hostname +';DATABASE='+_servicename+';Port='+str(_port)+';UID='+_username+';PWD='+_password)
-       cursor = cnxn.cursor()
-       if isReLoadAll==True:
-         sql=f"""select * from {source_name}   where  {colFirstLoad}>='{start_date_query}' """    
-       else:   
-           sql =f"""select * from {source_name}  where  {updateCol}>='{start_date_query}' """
-       print(sql)
-
-       dfAll = pd.read_sql(sql,  cnxn,parse_dates=dateColsToConvert)
-       print(f"isReLoadAll=={isReLoadAll}=={is_load_all}")  
-
-       return dfAll 
-    except Exception as e:
-       listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
-       logErrorMessage(listError)
+# In[ ]:
 
 
-# In[317]:
 
 
-def loadData_oracle(isReLoadAll):
+
+# In[16]:
+
+
+def loadData(isReLoadAll):
    
     try:
        engine = sqlalchemy.create_engine(f"oracle+cx_oracle://{_username}:{_password}@{_ip}:{_port}/?service_name={_servicename}")
@@ -566,23 +528,20 @@ def loadData_oracle(isReLoadAll):
        logErrorMessage(listError)
     
 
-
-# In[318]:
-
-
-if db_product=='mssql':
-    dfAll=loadData_mssql(isLoadingAllItems)
-elif db_product=='oracle':
-    dfAll=loadData_oracle(isLoadingAllItems)
-
-    
+dfAll=loadData(isLoadingAllItems)
 
 
-# In[319]:
+# # Test Data
+
+# In[17]:
 
 
-# Test Data
 # dfAll['last_update_date'].unique()
+
+
+# In[18]:
+
+
 # dfAll=dfAll.drop(columns=['line_description8','line_description9'  ,'dept_code'])
 # _dateColTest='last_update_date'
 
@@ -593,14 +552,10 @@ elif db_product=='oracle':
 # dtStr_imported=dt_imported.strftime("%Y-%m-%d %H:%M:%S")
 
 
-# 
-
 # # Transform Dataframe prior to Ingesting it to BQ
 
-# In[320]:
+# In[19]:
 
-
-dfAll.columns=[ col.lower() for col in  dfAll.columns   ]  
 
 dfAll['ImportedAt']=dt_imported 
 
@@ -612,7 +567,7 @@ print(dfAll.info())
 dfAll.head()
 
 
-# In[321]:
+# In[20]:
 
 
 if dfAll.empty:
@@ -620,7 +575,7 @@ if dfAll.empty:
     exit()
 
 
-# In[322]:
+# In[21]:
 
 
 listColAdminConfig=[colFirstLoad,partitionCol]
@@ -630,21 +585,26 @@ if len(dateCols)>0:
  listColAdminConfig.extend(dateCols)
 listColAdminConfig=list(dict.fromkeys(listColAdminConfig))
 
-# checkSomeNotExistingDF = [ col   for col in listColAdminConfig if col not in [ x.lower() for x in  listColDF] ]
 checkSomeNotExistingDF = [ col   for col in listColAdminConfig if col not in listColDF ]
 if len(checkSomeNotExistingDF)>0:
-    msg=f"Some columns in data source are not in dataframe from {db_product} View = {checkSomeNotExistingDF }"
+    msg=f"Some columns in data source are not in dataframe from Oracel View = {checkSomeNotExistingDF }"
     listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg])
     logErrorMessage(listError)
 else:
-    print(f"{listColAdminConfig} is in dataframe from {db_product} View")
+    print(f"{listColAdminConfig} is in dataframe from Oracel View")
+
+
+# In[ ]:
+
+
+
 
 
 # # BigQuery
 
 # # BigQuery Schema Management
 
-# In[323]:
+# In[22]:
 
 
 def createBQSchemaByDF():
@@ -685,7 +645,7 @@ def createBQSchemaByDF():
     return  schema,schemaDictNameType
 
 
-# In[324]:
+# In[23]:
 
 
 #https://pbpython.com/pandas_dtypes.html
@@ -715,7 +675,7 @@ def convert_dfSchema_same_bqSChema(bqName,bqType):
     raise ex
 
 
-# In[325]:
+# In[24]:
 
 
 def create_table(schema):
@@ -737,7 +697,7 @@ def create_table(schema):
         logErrorMessage(listError)   
 
 
-# In[326]:
+# In[25]:
 
 
 def get_table():
@@ -748,7 +708,7 @@ def get_table():
         return False
 
 
-# In[327]:
+# In[26]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -765,7 +725,7 @@ def check_same_schema():
         
     listColumnX=find_difference(listColDF,listFieldBQ)
     if len(listColumnX)>0:
-        e=f"Columns: {listColumnX} are NOT THE SAME on BigQuery and ViewTable {source_name} of {db_product}"
+        e=f"Columns: {listColumnX} are NOT THE SAME on BigQuery and ViewTable {source_name} of Oracle"
         listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)])
     else:
         print("1#All Fields on BQ and DF are ok.")  
@@ -841,7 +801,7 @@ def check_same_schema():
   
 
 
-# In[328]:
+# In[27]:
 
 
 isExistingTable=get_table()
@@ -879,10 +839,11 @@ else:
 
 # # Load data from CSV file to BQ
 
-# In[329]:
+# In[28]:
 
 
-try: 
+try:
+    
     no_rows=len(dfAll)
     no_cols=len(dfAll.columns)
    
@@ -900,7 +861,7 @@ except Exception as e:
   logErrorMessage(listError)
 
 
-# In[330]:
+# In[29]:
 
 
 # cannot auto detect because some column , there are Y,N,R  For R BQ is known as Bool
@@ -939,7 +900,7 @@ try:
     # error but continue
     collectBQError(job)   
     
-    print(f"Import data from {source_name} on {db_product} into BQ successfully.")
+    print(f"Import data from {source_name} on Oracle into BQ successfully.")
    
 
 
@@ -953,7 +914,7 @@ except Exception as e:
 
 # # Create Transation and delete csv file
 
-# In[331]:
+# In[30]:
 
 
 #Addtional Try Error    
@@ -992,7 +953,7 @@ recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[332]:
+# In[31]:
 
 
 #Addtional Try Error
