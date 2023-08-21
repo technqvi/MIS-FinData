@@ -22,7 +22,7 @@ dashboard analytics using PowerBI.
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
  
 # Folder/File & Document
-* [LoadDataFromOracleToBQ_Dev.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/LoadDataFromOracleToBQ_Dev.ipynb) | [LoadDataFromOracleToBQ.py](https://github.com/technqvi/MIS-FinData/blob/main/ETL_Orable_To_BQ/LoadDataFromOracleToBQ.py) : to ingest data from any databased to BigQuery, we can schecule it on Window Task Scheduler.
+* [LoadDataFromOracleToBQ_Dev.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/LoadDataFromOracleToBQ_Dev.ipynb) | [LoadDataFromOracleToBQ.py](https://github.com/technqvi/MIS-FinData/blob/main/ETL_Orable_To_BQ/LoadDataFromOracleToBQ.py) : script for loading data from any rational databases to BigQuery, we can schecule it on Window Task Scheduler to execute.
 * [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) :  folder to contail all files to run program.
 * [ETL_Orable_To_BQ/etl_web_admin](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin) : web site administrator to manage data source data and view ETL-Transactoin & Error.
 * ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Data base to store configuration data , transaction and error. To purge old data 45 days ago, we can run purge_etl_trans_n_days.bat
