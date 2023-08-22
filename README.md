@@ -10,10 +10,10 @@ dashboard analytics using PowerBI.
 # ETL Process to load data from ANY Ralational Databases to BigQuery
 <img width="703" alt="MIS-FinData" src="https://github.com/technqvi/MIS-FinData/assets/38780060/cb92bf51-b75e-428d-afa0-5ec9012c5335">
 
-* Load data view configuration data from SQLite by view name like  partition column , cluster columns  date column  and ETL mode(CSV,Dataframe).
-* Get last time to perform ETL to BQ to do incremental updates from table view.
-* Retrieve data from ant database by specifying condition to synch the most-up-to-date records.
-* Check whether the table exists(if no table) and check table schema on view and BQ is the same (if so).
+* Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
+* Retrieve data from any database as view by specifying condition to get the most-up-to-date records from time last update from prev step.
+* Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
+* Check whether the table exists(if no table) and check table schema is on view and BQ is the same (if so).
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
 * If thre is any error, the script will record error through SQLite and send any error notification to admin.
