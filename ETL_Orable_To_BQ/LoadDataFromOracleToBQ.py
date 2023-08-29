@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[44]:
+# In[127]:
 
 
 import pandas as pd
@@ -29,36 +29,34 @@ from dotenv import dotenv_values
 
 # # Input Parameter
 
-# In[58]:
+# In[161]:
 
 
 # set True whatever , you want to reload all items
-isLoadingAllItems=False
+isLoadingAllItems=False  # True (fullload) 
+option_write_to_bq=1 # 1=append (periodict job) 2=truncate (fullload) 
 is_py=True
+
 
 source_name=''
 
-#source_name='vw_IPF'
-
-#source_name='yit_ar_aging_with_cost'
+ # sql server
+# source_name='vw_ipf'
+# oracle
+source_name='yit_ar_aging_with_cost'
 #source_name='yip_wip_project'
 # source_name='yip_bg_account'
-
 #source_name="yip_invoice_monthly" # df
-
 #source_name="yip_ar_receipt"  # df/csv
 #source_name='yip_ap_payment' # csv
-
 #source_name="yip_pj_status" # csv
-
 # source_name='yip_po_listing' # df
-
 #source_name='yip_gl_account' # df
 
 
 # # Time To Import
 
-# In[59]:
+# In[162]:
 
 
 dt_imported=datetime.now()
@@ -77,7 +75,7 @@ env_path=r'D:\ETL_Orable_To_BQ\.env'
 
 # # Constant variable
 
-# In[60]:
+# In[163]:
 
 
 init_date_query='2020-01-01 00:00:00'
@@ -93,7 +91,7 @@ csv_error_folder='csv_error'
 
 # # Enter parameter on script
 
-# In[61]:
+# In[164]:
 
 
 if is_py:
@@ -108,7 +106,11 @@ if is_py:
         elif sys.argv[2]=='1'  :
          isLoadingAllItems=True
         else:
-            raise Exception("isLoadingAllItems 1=True | 0=False")
+            raise Exception("For Loading Data Mode ,allow you to enter either 1=Full Load | 0=Incremental Load")  
+            
+        option_write_to_bq= int(sys.argv[3])
+        if  option_write_to_bq not in [1,2]:
+         raise Exception("For Write to BQ Mode ,Allow you to enter either 1=Append or 2=Truncate")
 
         ok=True 
 
@@ -116,27 +118,41 @@ if is_py:
         print("Enter the following input: ")
         source_name = input("View Table Name : ")
         source_name=source_name.lower()
-        load_option= int(input("Loading All Data option (1=True | 0=False): "))
+        
+        load_option= int(input("Loading Data Mode option (1=Full Load | 0=Incremental Load): "))
         if load_option==0:
          isLoadingAllItems=False
         elif load_option==1  :
          isLoadingAllItems=True
         else:
-            raise Exception("isLoadingAllItems 1=True | 0=False")  
+            raise Exception("For Loading Data Mode ,allow you to enter either 1=Full Load | 0=Incremental Load")  
+            
 
-        print(f"Confirm to Load view = {source_name} and Load All Data= {isLoadingAllItems}")
+        option_write_to_bq= int(input("Write to BQ  option (1=Append | 2=Truncate): "))
+        if  option_write_to_bq not in [1,2]:
+         raise Exception("For Write to BQ Mode ,Allow you to enter either 1=Append or 2=Truncate")  
+
+        print(f"Confirm to Load view = {source_name} and Load All Data= {isLoadingAllItems} and Option writing to BigQuery={option_write_to_bq}")
         press_Y=input(f"Press Y=True But any key=False : ") 
         if press_Y=='Y':
          ok=True
 
     if ok==False:
-        print("No any action")
+        print("No any action to do")
         quit()
+
+
+# # Summary What sytem is about to perform
+
+# In[165]:
+
+
+print(f"Load view = {source_name} and Load All Data= {isLoadingAllItems} and Option writing toBQ={option_write_to_bq}")
 
 
 # # Check temp and error folder
 
-# In[62]:
+# In[166]:
 
 
 if os.path.exists(csv_temp_folder)==False:
@@ -147,7 +163,7 @@ if os.path.exists(csv_error_folder)==False:
 
 # # Init Const Variable
 
-# In[63]:
+# In[167]:
 
 
 listError=[]
@@ -155,9 +171,7 @@ listError=[]
 sqlite3.register_adapter(np.int64, lambda val: int(val))
 sqlite3.register_adapter(np.int32, lambda val: int(val))
 
-
 temp_path=f'{csv_temp_folder}/{source_name}.csv'
-
 
 start_date_query=''
 updateCol='last_update_date'
@@ -166,7 +180,7 @@ etlDateCols=[updateCol,'creation_date']
 
 # # Email Nofification &  Manage Log Error Message
 
-# In[64]:
+# In[168]:
 
 
 import  smtplib
@@ -207,7 +221,7 @@ def sendMailForError(errorSubject,errorHtml):
     
 
 
-# In[65]:
+# In[169]:
 
 
 def move_error_file(): # if any error ,then move csv to investigte later
@@ -230,7 +244,7 @@ def move_error_file(): # if any error ,then move csv to investigte later
  
 
 
-# In[66]:
+# In[170]:
 
 
 def logErrorMessage(errorList,raise_ex=True):
@@ -294,7 +308,7 @@ def logErrorMessage(errorList,raise_ex=True):
 
 # # Read Credential Config from .env file
 
-# In[67]:
+# In[171]:
 
 
 try: 
@@ -311,7 +325,7 @@ try:
     receivers=[config['MAIL_RECEIVER']]
     
     
-    # print(f"{projectId}-{region}-{dataset_id}-{table_id}")
+    print(f"{projectId} - {region} - {dataset_id} - {table_id}")
     # print(f"{host}-{port}-{sender}-{receivers}")
     print("Read all credential config values sucessfully.")
 
@@ -322,14 +336,23 @@ except Exception as e:
     logErrorMessage(listError)
 
 
-# # Setting BigQuery and Check DataSet
+# # Setting BigQuery and Check the follwing
+# * check data set
+# * check data table , it is not allowed to do full loading  if table exists
 
-# In[68]:
+# In[172]:
 
 
 # credentials = service_account.Credentials.from_service_account_file(json_credential_file)
 # client = bigquery.Client(credentials=credentials, project=projectId)
 client = bigquery.Client(project=projectId)
+print()
+
+write_to_bq_mode="WRITE_APPEND" 
+if option_write_to_bq==2:
+ write_to_bq_mode="WRITE_TRUNCATE"
+
+print(f"Load to BQ by : {write_to_bq_mode}")
 
 # dataset
 try:
@@ -339,11 +362,35 @@ except Exception as ex:
     msg=f"Dataset {dataset_id} is not found"
     listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg]) 
     logErrorMessage(listError)
+    
+    
+
+
+# In[173]:
+
+
+# table for full loading
+def get_table():
+    try:
+        client.get_table(table_id)
+        return True
+    except NotFound:
+        return False
+     
+if isLoadingAllItems==True:
+    if get_table()==True:
+        msg=f"Found {table_id}, isReLoadAll={isLoadingAllItems}, please delete table  prior to performing full load."
+        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,msg]) 
+        logErrorMessage(listError)
+        
+#       print("Delete table and re-create new one.")
+#       client.delete_table(table_id, not_found_ok=True)  
+#       create_table()
 
 
 # # Get data view as data source
 
-# In[69]:
+# In[174]:
 
 
 # get data from data_source
@@ -356,7 +403,8 @@ def get_ds(data_source_name):
         if df_item.empty==False:
            return df_item.iloc[0,:]
         else:
-           return None
+            raise Exception(f"Not found {data_source_name} in data_source table")
+
    except Exception as e:
        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
        logErrorMessage(listError)
@@ -369,7 +417,7 @@ print(f"Init date to query : {init_date_query}")
 
 # # Get data store by data view
 
-# In[70]:
+# In[175]:
 
 
 # get data from data_store
@@ -414,7 +462,7 @@ except Exception as e:
 
 # # Load Data Configuration of each data source for BigQuery
 
-# In[71]:
+# In[176]:
 
 
 if ds_item is not None:
@@ -474,7 +522,7 @@ print(dateColsToConvert)
 # # List Last ETL Transacton by Datasource Name
 # ### Get last etl of the specific view to perform incremental update
 
-# In[72]:
+# In[177]:
 
 
 def get_last_etl_by_ds(data_source):
@@ -492,7 +540,8 @@ def get_last_etl_by_ds(data_source):
        listError.append([datetime.now().strftime("%Y-%m-%d %H:%M:%S"),dtStr_imported,source_name,str(e)]) 
        logErrorMessage(listError)
 
-if isLoadingAllItems==False:
+print(f"Load-Option=={isLoadingAllItems} and (Write-BQ Option={option_write_to_bq}")    
+if (isLoadingAllItems==False) and (option_write_to_bq==1):
     dfLastETL=get_last_etl_by_ds(source_name)
     if dfLastETL.empty==False:
       start_date_query=dfLastETL.iloc[0,0]
@@ -514,7 +563,7 @@ else:
 
 # # Load data from DataBase  as DataFrame 
 
-# In[316]:
+# In[178]:
 
 
 # https://learn.microsoft.com/en-us/sql/machine-learning/data-exploration/python-dataframe-pandas?view=sql-server-ver16
@@ -523,7 +572,8 @@ def loadData_mssql(isReLoadAll):
     try:
        cnxn = pyodbc.connect('DRIVER={SQL Server};SERVER='+_hostname +';DATABASE='+_servicename+';Port='+str(_port)+';UID='+_username+';PWD='+_password)
        cursor = cnxn.cursor()
-       if isReLoadAll==True:
+       # laod all Or trucate both are similar but load all is used if schema change 
+       if (isReLoadAll==True) or (option_write_to_bq==2):   
          sql=f"""select * from {source_name}   where  {colFirstLoad}>='{start_date_query}' """    
        else:   
            sql =f"""select * from {source_name}  where  {updateCol}>='{start_date_query}' """
@@ -538,14 +588,15 @@ def loadData_mssql(isReLoadAll):
        logErrorMessage(listError)
 
 
-# In[317]:
+# In[179]:
 
 
 def loadData_oracle(isReLoadAll):
    
     try:
        engine = sqlalchemy.create_engine(f"oracle+cx_oracle://{_username}:{_password}@{_ip}:{_port}/?service_name={_servicename}")
-       if isReLoadAll==True:
+       # laod all Or trucate both are similar but load all is used if schema change 
+       if (isReLoadAll==True) or (option_write_to_bq==2): 
 
          sql=f"""select * from {source_name}   
            where  {colFirstLoad}>=to_date('{start_date_query}','yyyy-mm-dd hh24:mi:ss') 
@@ -567,7 +618,7 @@ def loadData_oracle(isReLoadAll):
     
 
 
-# In[318]:
+# In[180]:
 
 
 if db_product=='mssql':
@@ -575,10 +626,20 @@ if db_product=='mssql':
 elif db_product=='oracle':
     dfAll=loadData_oracle(isLoadingAllItems)
 
-    
+print(dfAll.shape)    
 
 
-# In[319]:
+# In[181]:
+
+
+if dfAll.empty:
+    print("No row to import to BQ")
+    exit()
+else:
+    print(f"{dfAll.shape[0]} rows are about  to import to BQ")
+
+
+# In[ ]:
 
 
 # Test Data
@@ -593,11 +654,15 @@ elif db_product=='oracle':
 # dtStr_imported=dt_imported.strftime("%Y-%m-%d %H:%M:%S")
 
 
-# 
+# if dfAll.empty:
+#     print("No row to import to BQ")
+#     exit()
+# else:
+#     print(f"{dfAll.shape[0]} rows are about  to import to BQ")
 
 # # Transform Dataframe prior to Ingesting it to BQ
 
-# In[320]:
+# In[150]:
 
 
 dfAll.columns=[ col.lower() for col in  dfAll.columns   ]  
@@ -612,15 +677,15 @@ print(dfAll.info())
 dfAll.head()
 
 
-# In[321]:
+# In[ ]:
 
 
-if dfAll.empty:
-    print("No row to import to BQ")
-    exit()
 
 
-# In[322]:
+
+# # BigQuery Schema Management and Mapping
+
+# In[151]:
 
 
 listColAdminConfig=[colFirstLoad,partitionCol]
@@ -640,11 +705,7 @@ else:
     print(f"{listColAdminConfig} is in dataframe from {db_product} View")
 
 
-# # BigQuery
-
-# # BigQuery Schema Management
-
-# In[323]:
+# In[152]:
 
 
 def createBQSchemaByDF():
@@ -685,7 +746,7 @@ def createBQSchemaByDF():
     return  schema,schemaDictNameType
 
 
-# In[324]:
+# In[153]:
 
 
 #https://pbpython.com/pandas_dtypes.html
@@ -715,7 +776,7 @@ def convert_dfSchema_same_bqSChema(bqName,bqType):
     raise ex
 
 
-# In[325]:
+# In[154]:
 
 
 def create_table(schema):
@@ -737,18 +798,13 @@ def create_table(schema):
         logErrorMessage(listError)   
 
 
-# In[326]:
+# In[ ]:
 
 
-def get_table():
-    try:
-        client.get_table(table_id)
-        return True
-    except NotFound:
-        return False
 
 
-# In[327]:
+
+# In[155]:
 
 
 # def check_same_schema(listFieldBQ,partitionNameBQ,partitionTypeBQ,clusterBQ,dateTypeBQ):
@@ -825,23 +881,12 @@ def check_same_schema():
     if len(listError)>0:
         logErrorMessage(listError)
         
-# delete table and set isLoading=True to load all data
-        
-#       isLoadingAllItems=True
-#       start_date_query=init_date_query
 
-#       print("ReLoad Data due to something in schema changed")  
-#       dfAll=loadData(isLoadingAllItems)
-#       print(dfAll.info())  
-
-#       print("Delete table and re-create new one.")
-#       client.delete_table(table_id, not_found_ok=True)  
-#       create_table()
  
   
 
 
-# In[328]:
+# In[156]:
 
 
 isExistingTable=get_table()
@@ -879,7 +924,7 @@ else:
 
 # # Load data from CSV file to BQ
 
-# In[329]:
+# In[157]:
 
 
 try: 
@@ -900,7 +945,7 @@ except Exception as e:
   logErrorMessage(listError)
 
 
-# In[330]:
+# In[158]:
 
 
 # cannot auto detect because some column , there are Y,N,R  For R BQ is known as Bool
@@ -923,14 +968,12 @@ try:
             schema=bqSchema,autodetect=False,
             max_bad_records=(no_rows-1),
             # autodetect=True,
-            write_disposition="WRITE_APPEND",
+            write_disposition=write_to_bq_mode,
             )
         with open(temp_path, "rb") as source_file:
             job = client.load_table_from_file(source_file, table_id, job_config=job_config)
     else :
-        # job_config = bigquery.LoadJobConfig(write_disposition="WRITE_TRUNCATE")  # ok for POs Listing
-        
-        job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND",schema=bqSchema)
+        job_config = bigquery.LoadJobConfig(write_disposition=write_to_bq_mode,schema=bqSchema)
         job = client.load_table_from_dataframe(dfAll, table_id, job_config=job_config,)  
 
 
@@ -953,7 +996,7 @@ except Exception as e:
 
 # # Create Transation and delete csv file
 
-# In[331]:
+# In[159]:
 
 
 #Addtional Try Error    
@@ -986,13 +1029,13 @@ if len(listError)>0:
 else:
  is_loaded_completely=1
 
-#dfETFTran=pd.DataFrame.from_records([{'etl_datetime':dtStr_imported,'data_source_id':source_name,'no_rows':no_rows,'is_load_all':is_load_all}])
+
 dfETFTran=pd.DataFrame.from_records([{'etl_datetime':dtStr_imported,'data_source_id':source_name,'is_load_all':is_load_all,'completely':is_loaded_completely}])
 recordsToInsert=list(dfETFTran.to_records(index=False))
 insertETLTrans(recordsToInsert)
 
 
-# In[332]:
+# In[160]:
 
 
 #Addtional Try Error
