@@ -23,7 +23,10 @@ dashboard analytics using PowerBI.
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
   * Data Store in WebAdmn is database configuration such as databas name, host/ip ,port ,username  and password.
-  * Data Source in WebAdmin is view table created in Database(Data Storage) like below. 
+  * Data Source in WebAdmin is view table created in Database(Data Store) consists of  the following fields.
+    * Partition and Cluster column on BigQuery.
+    * Date column converted from Datetime.
+    * Load type to BigQuery such as CSV,Dataframe.
 
  
 # Program Structure For Production
