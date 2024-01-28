@@ -23,7 +23,9 @@ dashboard analytics using PowerBI.
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
  
 # Program Structure For Production
-The figure below shows the program structure that  consists of the following itemss.
+The figure below shows the program structuret that is running on production that  consists of the following items.
+![program-structure](https://github.com/technqvi/MIS-FinData/assets/38780060/b0af9a12-dfcc-4ba8-b574-afb9a73fe7c6)
+
 * LoadDataFromOracleToBQ.py : it is core file to perform ETL from database to Bigquery
 * .env : store credentials data in database
 * {no}_batch_{view name}.bat : thess file are batch jobs that is set on Window Scheduler to run LoadDataFromOracleToBQ.py by view name and other additonal parameter.
