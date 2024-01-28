@@ -22,10 +22,16 @@ dashboard analytics using PowerBI.
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
  
-# Folder/File & Document
-* [LoadDataFromOracleToBQ_Dev.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/LoadDataFromOracleToBQ_Dev.ipynb) : script for loading data from any rational databases to BigQuery, we can schecule it on Window Task Scheduler to execute.
-* [DailyExportedTable.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/DailyExportedTable.ipynb)  :  List daily items imported to each table.
-* [ETL_Orable_To_BQ](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ) :  folder to contail all files to run program.
-* [ETL_Orable_To_BQ/etl_web_admin](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin) : web site administrator to manage data source data and view ETL-Transactoin & Error.
-* ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Data base to store configuration data , transaction and error. To purge old data 45 days ago, we can run purge_etl_trans_n_days.bat
-* [UserManual.docx](https://github.com/technqvi/MIS-FinData/blob/main/UserManual.docx)
+# Program Structure For Production
+The figure below shows the program structure that  consists of the following itemss.
+* LoadDataFromOracleToBQ.py : it is core file to perform ETL from database to Bigquery
+* .env : store credentials data in database
+* {no}_batch_{view name}.bat : thess file are batch jobs that is set on Window Scheduler to run LoadDataFromOracleToBQ.py by view name and other additonal parameter.
+* ManualBatch_LoadDataFromOracleToBQ.bat : this batch job is allowed user to run LoadDataFromOracleToBQ.py by passing view anme manually.
+* purge_etl_trans_n_days.bat | purge_etl_trans_n_days.sql : it is userd to purge the ETL transaction.
+* sql_init_table.sql :  it is provided to generate table that stored configuration data  sucha  data store and data source(tbale view), ETL transaction and Error.
+* etl_web_admin : This is Web admin developed based on Django framework, web site administrator to manage data source data and view ETL-Transactoin & Error.
+* ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Data base to store configuration data
+* DailyExportedTable.py | DailyExportedTable.bat : run this to check the number of records exported from the database to Bigquery for data consistency checks.
+* UserManual.docx : For administrator.
+
