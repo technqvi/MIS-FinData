@@ -1,15 +1,19 @@
 .ipynb_checkpoints
 .ipynb_checkpoints/
 .venv
-.env
+*.env
 
 *.lnk
 *.csv
 *.xlsx
+*.docx
 
-QueryMISBIOnBQ.ipynb
-#UserManual.docx
-# etl_config_transaction.db
-# settings.py
-
+ETL_Orable_To_BQ
+UserManual.docx
+etl_config_transaction.db
+etl_config_transaction.sqbpro
+settings.py
 template-job
+etl_web_admin
+DailyExportedTable.ipynb
+
