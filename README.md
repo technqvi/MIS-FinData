@@ -11,8 +11,9 @@ dashboard analytics using PowerBI.
 ### [LoadDataFromOracleToBQ_Dev.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/LoadDataFromOracleToBQ_Dev.ipynb)
 <img width="703" alt="MIS-FinData" src="https://github.com/technqvi/MIS-FinData/assets/38780060/cb92bf51-b75e-428d-afa0-5ec9012c5335">
 
+
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
-* Retrieve data from any database as view by specifying condition to get the most-up-to-date records from time last update from prev step.
+* Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
 * Check whether the table exists(if no table) and check table schema is on view and BQ is the same (if so).
 * Ingest data into BigQuery.
@@ -21,6 +22,9 @@ dashboard analytics using PowerBI.
 
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
+  * Data Store in WebAdmn is database configuration such as databas name, host/ip ,port ,username  and password.
+  * Data Source in WebAdmin is view table created in Database(Data Storage) like below. 
+
  
 # Program Structure For Production
 The figure below shows the program structuret that is running on production that  consists of the following items.
