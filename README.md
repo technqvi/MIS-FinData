@@ -8,6 +8,7 @@ dashboard analytics using PowerBI.
 * [DB Browser for SQLite](https://sqlitebrowser.org/) 
 
 # ETL Process to load data from ANY Ralational Databases to BigQuery
+### [LoadDataFromOracleToBQ_Dev.ipynb](https://github.com/technqvi/MIS-FinData/blob/main/LoadDataFromOracleToBQ_Dev.ipynb)
 <img width="703" alt="MIS-FinData" src="https://github.com/technqvi/MIS-FinData/assets/38780060/cb92bf51-b75e-428d-afa0-5ec9012c5335">
 
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
