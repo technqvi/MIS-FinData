@@ -20,8 +20,8 @@ dashboard analytics using PowerBI.
 * Record ETL Transaction to SQLite.
 * If thre is any error, the script will record error through SQLite and send any error notification to admin.
 * Sample view on DB and BQ
-  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql)
-  * [View on BQ](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql)
+  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Databaseto periocically pull data from transaction table to temp table for BigQuery.
+  * [View on BQ](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql) : Write view on BigQiery for PowerBI.
 
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
   ![image](https://github.com/technqvi/MIS-FinData/assets/38780060/50e9bb99-0e19-4b19-bd4f-6daee7eb0c1e)
