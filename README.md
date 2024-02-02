@@ -33,17 +33,17 @@ dashboard analytics using PowerBI.
 
  
 # Program Structure For Production
-The figure below shows the program structuret that is running on production that  consists of the following items.
+The figure below shows the program structure that is running on production that  consists of the following items.
 ![program-structure](https://github.com/technqvi/MIS-FinData/assets/38780060/b0af9a12-dfcc-4ba8-b574-afb9a73fe7c6)
 
 * LoadDataFromOracleToBQ.py : it is core file to perform ETL from database to Bigquery
 * .env : store credentials data in database
-* {no}_batch_{view name}.bat : thess file are batch jobs that is set on Window Scheduler to run LoadDataFromOracleToBQ.py by view name and other additonal parameter.
-* ManualBatch_LoadDataFromOracleToBQ.bat : this batch job is allowed user to run LoadDataFromOracleToBQ.py by passing view anme manually.
-* purge_etl_trans_n_days.bat | purge_etl_trans_n_days.sql : it is userd to purge the ETL transaction.
-* sql_init_table.sql :  it is provided to generate table that stored configuration data  sucha  data store and data source(tbale view), ETL transaction and Error.
+* {no}_batch_{view name}.bat : thess file are batch jobs on Window Scheduler to run LoadDataFromOracleToBQ.py by view name and other additional parameter.
+* ManualBatch_LoadDataFromOracleToBQ.bat : this batch job is allowed user to run LoadDataFromOracleToBQ.py by passing view name manually.
+* purge_etl_trans_n_days.bat | purge_etl_trans_n_days.sql : it is userd to purge the ETL transaction from database every n days.
+* sql_init_table.sql :  it is provided to generate table that stored configuration data  such as  data store(data base) and data source(table view), ETL transaction and Error.
 * etl_web_admin : This is Web admin developed based on Django framework, web site administrator to manage data source data and view ETL-Transactoin & Error.
-* ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Data base to store configuration data
+* ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Database used to store configuration data and ETL transaction
 * DailyExportedTable.py | DailyExportedTable.bat : run this to check the number of records exported from the database to Bigquery for data consistency checks.
 * UserManual.docx : For administrator.
 
