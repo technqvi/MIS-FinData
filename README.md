@@ -15,12 +15,12 @@ dashboard analytics using PowerBI.
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
 * Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
-* Check whether the table exists(if no table) and check table schema is on view and BQ is the same (if so).
+* Check whether the table exists and check table schema is on view and BQ is the same.
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
 * If thre is any error, the script will record error through SQLite and send any error notification to admin.
 * Sample view on DB and BQ
-  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Databaseto periocically pull data from transaction table to temp table for BigQuery.
+  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery .
   * [View on BQ](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql) : Write view on BigQiery for PowerBI.
 
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
