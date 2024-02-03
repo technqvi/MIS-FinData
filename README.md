@@ -12,16 +12,10 @@ dashboard analytics using PowerBI.
 <img width="703" alt="MIS-FinData" src="https://github.com/technqvi/MIS-FinData/assets/38780060/cb92bf51-b75e-428d-afa0-5ec9012c5335">
 <img width="597" alt="data_flow_ingestion" src="https://github.com/technqvi/MIS-FinData/assets/38780060/c07b69da-e554-4173-aff8-e5b9d5638c1e">
 
-
-* Get the last time to perform that ETL from the table view to BQ to do incremental updates from the table view of any database.
-* Retrieve data as a view table from any database by specifying conditions to get the most-up-to-date records from time last update from the previous step.
-* Load  configuration data from SQLite by view name like  partition column, cluster columns  date column,  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
-
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
 * Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
-
-* Check whether the table exists and check table schema is on view and BQ is the same.
+* Check whether the table exists and check table schema is on view and BQ is the same. If table does not exist, it will be automatically created.
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
 * If there is any error, the script will record the error through SQLite and send any error notification to the adminstrator.
