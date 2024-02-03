@@ -12,15 +12,25 @@ dashboard analytics using PowerBI.
 <img width="703" alt="MIS-FinData" src="https://github.com/technqvi/MIS-FinData/assets/38780060/cb92bf51-b75e-428d-afa0-5ec9012c5335">
 <img width="597" alt="data_flow_ingestion" src="https://github.com/technqvi/MIS-FinData/assets/38780060/c07b69da-e554-4173-aff8-e5b9d5638c1e">
 
+<<<<<<< HEAD
 * Get the last time to perform that ETL from the table view to BQ to do incremental updates from the table view of any database.
 * Retrieve data as a view table from any database by specifying conditions to get the most-up-to-date records from time last update from the previous step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column,  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
+=======
+* Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
+* Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
+* Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
+>>>>>>> 24d485046eea02ca8a70bb893af96ac107229fd4
 * Check whether the table exists and check table schema is on view and BQ is the same.
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
 * If there is any error, the script will record the error through SQLite and send any error notification to the adminstrator.
 * Sample view on DB and BQ
+<<<<<<< HEAD
   * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery.
+=======
+  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery .
+>>>>>>> 24d485046eea02ca8a70bb893af96ac107229fd4
   * [View on BQ](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql) : Write view on BigQiery for PowerBI.
 
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
@@ -41,7 +51,11 @@ The figure below shows the program structure that is running on production that 
 * {no}_batch_{view name}.bat : thess file are batch jobs on Window Scheduler to run LoadDataFromOracleToBQ.py by view name and other additional parameter.
 * ManualBatch_LoadDataFromOracleToBQ.bat : this batch job is allowed user to run LoadDataFromOracleToBQ.py by passing view name manually.
 * purge_etl_trans_n_days.bat | purge_etl_trans_n_days.sql : it is userd to purge the ETL transaction from database every n days.
+<<<<<<< HEAD
 * sql_init_table.sql :  it is provided to generate table that stored configuration data  such as  data store(database) and data source(table view), ETL transaction, and Error.
+=======
+* sql_init_table.sql :  it is provided to generate table that stored configuration data  such as  data store(data base) and data source(table view), ETL transaction and Error.
+>>>>>>> 24d485046eea02ca8a70bb893af96ac107229fd4
 * etl_web_admin : This is Web admin developed based on Django framework, web site administrator to manage data source data and view ETL-Transactoin & Error.
 * ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Database used to store configuration data and ETL transaction
 * DailyExportedTable.py | DailyExportedTable.bat : run this to check the number of records exported from the database to Bigquery for data consistency checks.
