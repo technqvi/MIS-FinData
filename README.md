@@ -19,7 +19,7 @@ dashboard analytics using PowerBI.
 * Ingest data(Dataframe or Csv file) into BigQuery and record ETL Transaction to SQLite. .
 * If there is any error, the script will record the error through SQLite and send any error notification to the adminstrator.
 * Sample view on DB and BQ
-  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery.
+  * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_database.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery.
   * [View on BQ](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql) : Write view on BigQiery for PowerBI.
 
   # [Web Administration For Data Configuration and Transaction](https://github.com/technqvi/MIS-FinData/tree/main/ETL_Orable_To_BQ/etl_web_admin)
