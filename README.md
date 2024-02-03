@@ -16,8 +16,7 @@ dashboard analytics using PowerBI.
 * Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
 * Check whether the table exists and check table schema is on view and BQ is the same. If table does not exist, it will be automatically created.
-* Ingest data into BigQuery.
-* Record ETL Transaction to SQLite.
+* Ingest data(Dataframe or Csv file) into BigQuery and record ETL Transaction to SQLite. .
 * If there is any error, the script will record the error through SQLite and send any error notification to the adminstrator.
 * Sample view on DB and BQ
   * [View on PostgreSQL](https://github.com/technqvi/MIS-FinData/blob/main/sample_view_bq.sql): Write view on Database for being used to pull data from original table to stage table for ingesting to BigQuery.
