@@ -20,7 +20,7 @@ dashboard analytics using PowerBI.
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
 * Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
->>>>>>> 24d485046eea02ca8a70bb893af96ac107229fd4
+
 * Check whether the table exists and check table schema is on view and BQ is the same.
 * Ingest data into BigQuery.
 * Record ETL Transaction to SQLite.
@@ -53,9 +53,7 @@ The figure below shows the program structure that is running on production that 
 * purge_etl_trans_n_days.bat | purge_etl_trans_n_days.sql : it is userd to purge the ETL transaction from database every n days.
 
 * sql_init_table.sql :  it is provided to generate table that stored configuration data  such as  data store(database) and data source(table view), ETL transaction, and Error.
-=======
 * sql_init_table.sql :  it is provided to generate table that stored configuration data  such as  data store(data base) and data source(table view), ETL transaction and Error.
-
 * etl_web_admin : This is Web admin developed based on Django framework, web site administrator to manage data source data and view ETL-Transactoin & Error.
 * ETL_Orable_To_BQ/etl_web_admin/etl_config_transaction.db : SQLite Database used to store configuration data and ETL transaction
 * DailyExportedTable.py | DailyExportedTable.bat : run this to check the number of records exported from the database to Bigquery for data consistency checks.
