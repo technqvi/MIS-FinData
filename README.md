@@ -13,7 +13,7 @@ dashboard analytics using PowerBI.
 <img width="597" alt="data_flow_ingestion" src="https://github.com/technqvi/MIS-FinData/assets/38780060/c07b69da-e554-4173-aff8-e5b9d5638c1e">
 
 * Get the last time to perform that ETL from table view to BQ to do incremental updates from the table view of any database.
-* Retrieve data as view table from any database by specifying condition to get the most-up-to-date records from time last update from prev step.
+* Retrieve data as view table from any database by specifying condition to get the records that timestamp columns is more that time last ETL from prev step.
 * Load  configuration data from SQLite by view name like  partition column, cluster columns  date column  and ETL mode(CSV,Dataframe) so that these can be used to perform data schema validation against BigQuery.
 * Check whether the table exists and check table schema is on view and BQ is the same. If table does not exist, it will be automatically created.
 * Ingest data(Dataframe or Csv file) into BigQuery and record ETL Transaction to SQLite. .
